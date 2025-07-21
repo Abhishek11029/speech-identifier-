@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Notes App</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <button id="recordButton"><span class="record-button-inner"><i class="fa fa-microphone"></i></span></button>
+  <div id="recordingStatus"></div>
+  <div id="rawTranscription" placeholder="Raw transcription will appear here"></div>
+  <button id="themeToggleButton"><i class="fa fa-sun"></i></button>
+  <canvas id="liveWaveformCanvas" style="width: 100%; height: 60px;"></canvas>
+  <script src="voice-notes.js"></script>
+</body>
+</html>
