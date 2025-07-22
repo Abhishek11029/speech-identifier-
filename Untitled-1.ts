@@ -1,13 +1,8 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
-*/
-/* tslint:disable */
+ * Voice Notes App (Sample Project)
 
-import {GoogleGenAI} from '@google/genai';
+
 import {marked} from 'marked';
-
-const MODEL_NAME = 'gemini-2.5-flash-preview-04-17';
 
 interface Note {
   id: string;
@@ -17,7 +12,6 @@ interface Note {
 }
 
 class VoiceNotesApp {
-  private genAI: any;
   private mediaRecorder: MediaRecorder | null = null;
   private recordButton: HTMLButtonElement;
   private recordingStatus: HTMLDivElement;
@@ -48,11 +42,6 @@ class VoiceNotesApp {
   private recordingStartTime: number = 0;
 
   constructor() {
-    this.genAI = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
-      apiVersion: 'v1alpha',
-    });
-
     this.recordButton = document.getElementById(
       'recordButton',
     ) as HTMLButtonElement;
@@ -547,24 +536,17 @@ class VoiceNotesApp {
     }
   }
 
+  // Replace Gemini transcription with a placeholder function
   private async getTranscription(
     base64Audio: string,
     mimeType: string,
   ): Promise<void> {
     try {
       this.recordingStatus.textContent = 'Getting transcription...';
-
-      const contents = [
-        {text: 'Generate a complete, detailed transcript of this audio.'},
-        {inlineData: {mimeType: mimeType, data: base64Audio}},
-      ];
-
-      const response = await this.genAI.models.generateContent({
-        model: MODEL_NAME,
-        contents: contents,
-      });
-
-      const transcriptionText = response.text;
+      // TODO: Replace this with your own transcription backend/API call
+      // For now, just simulate a delay and return a placeholder
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const transcriptionText = '[Transcription placeholder: implement your backend]';
 
       if (transcriptionText) {
         this.rawTranscription.textContent = transcriptionText;
@@ -606,6 +588,7 @@ class VoiceNotesApp {
     }
   }
 
+  // Replace Gemini note polishing with a placeholder function
   private async getPolishedNote(): Promise<void> {
     try {
       if (
@@ -623,21 +606,10 @@ class VoiceNotesApp {
       }
 
       this.recordingStatus.textContent = 'Polishing note...';
-
-      const prompt = `Take this raw transcription and create a polished, well-formatted note.
-                    Remove filler words (um, uh, like), repetitions, and false starts.
-                    Format any lists or bullet points properly. Use markdown formatting for headings, lists, etc.
-                    Maintain all the original content and meaning.
-
-                    Raw transcription:
-                    ${this.rawTranscription.textContent}`;
-      const contents = [{text: prompt}];
-
-      const response = await this.genAI.models.generateContent({
-        model: MODEL_NAME,
-        contents: contents,
-      });
-      const polishedText = response.text;
+      // TODO: Replace this with your own note-polishing backend/API call
+      // For now, just simulate a delay and return a placeholder
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const polishedText = '[Polished note placeholder: implement your backend]';
 
       if (polishedText) {
         const htmlContent = marked.parse(polishedText);
@@ -670,7 +642,7 @@ class VoiceNotesApp {
           for (const line of lines) {
             if (line.length > 0) {
               let potentialTitle = line.replace(
-                /^[\*_\`#\->\s\[\]\(.\d)]+/,
+                /^[\*_\`#\->\s\[\]\(\.\d\)]+/,
                 '',
               );
               potentialTitle = potentialTitle.replace(/[\*_\`#]+$/, '');
