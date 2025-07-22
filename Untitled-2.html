@@ -1,17 +1,550 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Voice Notes App</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Notes App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            margin-bottom: 2rem;
+        }
+
+        .record-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(45deg, #ff3b30, #ff0000);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status {
+            color: white;
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            min-height: 1.5rem;
+        }
+
+        .waveform-container {
+            margin: 1.5rem 0;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            height: 100px;
+        }
+
+        #liveWaveformCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .transcription-container {
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .transcription-label {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        #rawTranscription {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            color: white;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 1rem;
+            line-height: 1.5;
+            backdrop-filter: blur(5px);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .features {
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .features ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .features li {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                width: 95%;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .record-button {
+                width: 70px;
+                height: 70px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <button id="recordButton"><span class="record-button-inner"><i class="fa fa-microphone"></i></span></button>
-  <div id="recordingStatus"></div>
-  <div id="rawTranscription" placeholder="Raw transcription will appear here"></div>
-  <button id="themeToggleButton"><i class="fa fa-sun"></i></button>
-  <canvas id="liveWaveformCanvas" style="width: 100%; height: 60px;"></canvas>
-  <script src="voice-notes.js"></script>
+    <button id="themeToggleButton" class="theme-toggle" title="Toggle Theme">
+        <i class="fas fa-sun"></i>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Voice Notes</h1>
+            <p>Record, transcribe, and visualize your voice in real-time</p>
+        </div>
+
+        <div class="controls">
+            <button id="recordButton" class="record-button" title="Start/Stop Recording">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+
+        <div id="recordingStatus" class="status">Ready to record</div>
+
+        <div class="waveform-container">
+            <canvas id="liveWaveformCanvas"></canvas>
+        </div>
+
+        <div class="transcription-container">
+            <div class="transcription-label">Live Transcription:</div>
+            <div id="rawTranscription"></div>
+        </div>
+
+        <div class="features">
+            <ul>
+                <li>Real-time voice recording with high-quality audio</li>
+                <li>Live speech-to-text transcription</li>
+                <li>Visual waveform display</li>
+                <li>Dark/Light theme toggle</li>
+                <li>Responsive design for all devices</li>
+                <li>Secure browser-based processing</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * VoiceNotesApp: A robust browser-based voice recorder with live transcription.
+         * Demonstrates best practices in error handling, resource management, and UI state.
+         */
+        class VoiceNotesApp {
+            /**
+             * Initializes the app, binds UI elements, and sets up event listeners.
+             */
+            constructor() {
+                // UI Elements
+                this.recordButton = document.getElementById('recordButton');
+                this.recordingStatus = document.getElementById('recordingStatus');
+                this.rawTranscription = document.getElementById('rawTranscription');
+                this.themeToggleButton = document.getElementById('themeToggleButton');
+                this.themeToggleIcon = this.themeToggleButton?.querySelector('i');
+                this.liveWaveformCanvas = document.getElementById('liveWaveformCanvas');
+                this.liveWaveformCtx = this.liveWaveformCanvas?.getContext('2d');
+
+                // State
+                this.isRecording = false;
+                this.audioChunks = [];
+                this.mediaRecorder = null;
+                this.stream = null;
+                this.recognition = null;
+                this.audioContext = null;
+                this.analyserNode = null;
+                this.waveformDataArray = null;
+                this.waveformDrawingId = null;
+
+                // Guard: Ensure required UI elements exist
+                if (!this.recordButton || !this.recordingStatus) {
+                    console.error('Missing required UI elements. Please ensure "recordButton" and "recordingStatus" IDs exist in the DOM.');
+                    return;
+                }
+
+                this.bindEventListeners();
+                this.initTheme();
+                this._updateStatus('Ready to record');
+            }
+
+            /**
+             * Binds event listeners for UI controls.
+             */
+            bindEventListeners() {
+                this.recordButton.addEventListener('click', () => this.toggleRecording());
+                this.themeToggleButton?.addEventListener('click', () => this.toggleTheme());
+                window.addEventListener('resize', () => this.setupCanvasDimensions());
+            }
+
+            /**
+             * Updates the status message in the UI.
+             * @param {string} message
+             */
+            _updateStatus(message) {
+                if (this.recordingStatus) {
+                    this.recordingStatus.textContent = message;
+                }
+            }
+
+            /**
+             * Initializes the theme based on localStorage.
+             */
+            initTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-mode');
+                    this.themeToggleIcon?.classList.remove('fa-sun');
+                    this.themeToggleIcon?.classList.add('fa-moon');
+                } else {
+                    document.body.classList.remove('light-mode');
+                    this.themeToggleIcon?.classList.remove('fa-moon');
+                    this.themeToggleIcon?.classList.add('fa-sun');
+                }
+            }
+
+            /**
+             * Toggles between light and dark themes.
+             */
+            toggleTheme() {
+                document.body.classList.toggle('light-mode');
+                if (document.body.classList.contains('light-mode')) {
+                    localStorage.setItem('theme', 'light');
+                    this.themeToggleIcon?.classList.remove('fa-sun');
+                    this.themeToggleIcon?.classList.add('fa-moon');
+                } else {
+                    localStorage.setItem('theme', 'dark');
+                    this.themeToggleIcon?.classList.remove('fa-moon');
+                    this.themeToggleIcon?.classList.add('fa-sun');
+                }
+            }
+
+            /**
+             * Toggles recording state.
+             */
+            async toggleRecording() {
+                try {
+                    if (!this.isRecording) {
+                        await this.startRecording();
+                    } else {
+                        await this.stopRecording();
+                    }
+                } catch (error) {
+                    this._updateStatus('Error: ' + (error.message || error));
+                    this.isRecording = false;
+                }
+            }
+
+            /**
+             * Starts audio recording and speech recognition.
+             */
+            async startRecording() {
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.mediaRecorder = new MediaRecorder(this.stream);
+                    this.audioChunks = [];
+
+                    this.mediaRecorder.ondataavailable = event => {
+                        if (event.data && event.data.size > 0) this.audioChunks.push(event.data);
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        // Optionally: Save or play the audio
+                        this.audioChunks = []; // Clear after use
+                        this._updateStatus('Ready to record');
+                    };
+
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+                    this._updateStatus('Recording...');
+                    this.recordButton.classList.add('recording');
+                    this.startLiveWaveform();
+                    this.startSpeechRecognition();
+                } catch (error) {
+                    this._updateStatus(`Error: ${error.name || error}`);
+                    this.isRecording = false;
+                    // Release stream if partially acquired
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                        this.stream = null;
+                    }
+                }
+            }
+
+            /**
+             * Stops audio recording and releases resources.
+             */
+            async stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    // Release microphone stream
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                        this.stream = null;
+                    }
+                    this.isRecording = false;
+                    this.recordButton.classList.remove('recording');
+                    this._updateStatus('Processing...');
+                    this.stopSpeechRecognition();
+                    this.stopLiveWaveform();
+                }
+            }
+
+            /**
+             * Starts browser-native speech recognition.
+             */
+            startSpeechRecognition() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    this._updateStatus('Speech recognition not supported in this browser.');
+                    return;
+                }
+                this.recognition = new SpeechRecognition();
+                this.recognition.lang = 'en-US';
+                this.recognition.interimResults = true;
+                this.recognition.continuous = true;
+
+                this.recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    if (this.rawTranscription) this.rawTranscription.textContent = transcript;
+                };
+                this.recognition.onerror = (event) => {
+                    this._updateStatus('Recognition error: ' + event.error);
+                };
+                this.recognition.onend = () => {
+                    if (this.isRecording) this.recognition.start(); // Restart if still recording
+                };
+                this.recognition.start();
+            }
+
+            /**
+             * Stops speech recognition.
+             */
+            stopSpeechRecognition() {
+                if (this.recognition) {
+                    this.recognition.stop();
+                    this.recognition = null;
+                }
+                this._updateStatus('Transcription complete.');
+            }
+
+            /**
+             * Sets up the waveform canvas dimensions.
+             */
+            setupCanvasDimensions() {
+                if (!this.liveWaveformCanvas || !this.liveWaveformCtx) return;
+                const canvas = this.liveWaveformCanvas;
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = Math.round(rect.width * dpr);
+                canvas.height = Math.round(rect.height * dpr);
+                this.liveWaveformCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            /**
+             * Starts the live waveform visualization.
+             */
+            startLiveWaveform() {
+                if (!this.liveWaveformCanvas || !this.liveWaveformCtx) return;
+                this.setupCanvasDimensions();
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = this.audioContext.createMediaStreamSource(this.stream);
+                this.analyserNode = this.audioContext.createAnalyser();
+                this.analyserNode.fftSize = 256;
+                this.waveformDataArray = new Uint8Array(this.analyserNode.frequencyBinCount);
+                source.connect(this.analyserNode);
+                this.drawLiveWaveform();
+            }
+
+            /**
+             * Draws the live waveform.
+             */
+            drawLiveWaveform() {
+                if (!this.analyserNode || !this.waveformDataArray || !this.liveWaveformCtx || !this.liveWaveformCanvas || !this.isRecording) {
+                    if (this.waveformDrawingId) cancelAnimationFrame(this.waveformDrawingId);
+                    this.waveformDrawingId = null;
+                    return;
+                }
+                this.waveformDrawingId = requestAnimationFrame(() => this.drawLiveWaveform());
+                this.analyserNode.getByteFrequencyData(this.waveformDataArray);
+                const ctx = this.liveWaveformCtx;
+                const canvas = this.liveWaveformCanvas;
+                const logicalWidth = canvas.clientWidth;
+                const logicalHeight = canvas.clientHeight;
+                ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+                const bufferLength = this.analyserNode.frequencyBinCount;
+                const numBars = Math.floor(bufferLength * 0.5);
+                const totalBarPlusSpacingWidth = logicalWidth / numBars;
+                const barWidth = Math.max(1, Math.floor(totalBarPlusSpacingWidth * 0.7));
+                const barSpacing = Math.max(0, Math.floor(totalBarPlusSpacingWidth * 0.3));
+                let x = 0;
+                ctx.fillStyle = '#ff3b30';
+                for (let i = 0; i < numBars; i++) {
+                    if (x >= logicalWidth) break;
+                    const dataIndex = Math.floor(i * (bufferLength / numBars));
+                    const barHeightNormalized = this.waveformDataArray[dataIndex] / 255.0;
+                    let barHeight = barHeightNormalized * logicalHeight;
+                    if (barHeight < 1 && barHeight > 0) barHeight = 1;
+                    barHeight = Math.round(barHeight);
+                    const y = Math.round((logicalHeight - barHeight) / 2);
+                    ctx.fillRect(Math.floor(x), y, barWidth, barHeight);
+                    x += barWidth + barSpacing;
+                }
+            }
+
+            /**
+             * Stops the live waveform and releases audio resources.
+             */
+            stopLiveWaveform() {
+                if (this.waveformDrawingId) {
+                    cancelAnimationFrame(this.waveformDrawingId);
+                    this.waveformDrawingId = null;
+                }
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+                this.analyserNode = null;
+                this.waveformDataArray = null;
+                if (this.liveWaveformCtx && this.liveWaveformCanvas) {
+                    this.liveWaveformCtx.clearRect(0, 0, this.liveWaveformCanvas.width, this.liveWaveformCanvas.height);
+                }
+            }
+
+            /**
+             * Cleans up event listeners and resources.
+             */
+            destroy() {
+                this.recordButton?.removeEventListener('click', this.toggleRecording);
+                this.themeToggleButton?.removeEventListener('click', this.toggleTheme);
+                window.removeEventListener('resize', this.setupCanvasDimensions);
+                this.stopRecording();
+                this.stopSpeechRecognition();
+                this.stopLiveWaveform();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new VoiceNotesApp();
+        });
+    </script>
 </body>
-</html>
+</html> 
